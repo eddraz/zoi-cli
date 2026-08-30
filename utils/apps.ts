@@ -40,10 +40,15 @@ async function getWebSuccessfully(
 
 async function getUsage(appName: string) {
   try {
-    return await runCommand({
+    console.log("EXEC", appName);
+    const cmd = await runCommand({
       commands: [appName, "--help"],
       response: "text",
-    }).then((r: string | Deno.ChildProcess) => r.toString().trim());
+    }).then((r: string | Deno.ChildProcess) => {
+      console.log("respondió;", r);
+      return r.toString().trim()}).catch(err => console.error("error:", err));
+    console.log(cmd);
+    return cmd;
   } catch (error) {
     console.error(error);
   }
@@ -83,7 +88,6 @@ export async function getSearchContent(app: App) {
     });
 
     const query = `What is the '${app.name}' CLI application or command?`;
-    console.log(query);
     const webSearchResponse = await webSearch(query);
     const webSearchResults = webSearchResponse.results;
     if (webSearchResults && webSearchResults.length > 0) {
@@ -149,7 +153,7 @@ async function loopApps(
     config.ai["style-log"],
     `\`${appName}\``,
   );
-  console.log(paths);
+  console.log(paths, typeof appName);
 
   if (typeof appName === "string") {
     const appBD = await kv.get(["apps", appName]);
@@ -157,14 +161,19 @@ async function loopApps(
     const app: App = appDBValue || {
       name: appName,
     };
+    console.log(app);
     const existsApp = await runCommand({
       commands: ["which", app.name],
       response: "text",
     }).then((r: string | Deno.ChildProcess) => r.toString().trim());
+    console.log(existsApp);
 
     if (existsApp) {
+      console.log(appBD.value, !appBD.value)
       if (!appBD.value) {
         app.usage = await getUsage(app.name);
+
+        console.log(app);
 
         console.log(
           `%c${config.ai["emoji-log"]} ${await dictionaryText(

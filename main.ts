@@ -9,18 +9,22 @@ import { welcomeText } from "~/utils/welcome-prompt.ts";
 import { input } from "./utils/input.ts";
 import { dictionaryText } from "~/utils/dictionary-text.ts";
 import { userIntent } from "~/utils/user-intent.ts";
+import { removeThinkTags } from "~/utils/remove-think-tags.ts";
+import { bgBlack, cyan } from "@std/fmt/colors";
 import { getApps } from "~/utils/apps.ts";
 
 const apps = await getApps();
 console.log(apps);
 Deno.exit(0);
+
+const encoder = new TextEncoder();
 const systemData = await getOSData();
 const promptMessage = input(await welcomeText(systemData));
 console.log(
   `%c${config.ai["emoji-log"]} ${await dictionaryText(
     systemData,
     "wait-let-me-think",
-    "Espera, déjame pensar.",
+    "Espera, déjame pensar",
   )}...`,
   config.ai["style-log"],
 );
@@ -28,10 +32,126 @@ const translatedMessage = await translate(
   `${systemData.language.iso3}-eng` as Pair,
   promptMessage,
 );
-const improve = await userIntent(translatedMessage ?? promptMessage);
-console.log(translatedMessage, improve);
 // console.log(intent);
+const llama = new LlamaCpp({
+  port: 18080,
+});
+const request = await llama.sendMessage(
+  {
+    messages: [
+      {
+        role: "system",
+        content: `Your name is Zoi and you are a CLI assistant.
 
+        RESPONSE RULES:
+        1. For programming, technical concepts, or general error explanations: Answer normally and helpfully.
+        2. For real-time data, current events, time, date, or ANY information about the user's specific system (hardware, software, files, processes, installed programs): Respond with EXACTLY: "DEV"
+        3. Never guess or make up information about the user's system.
+
+        Examples:
+
+        [Real-time / System info → "DEV"]
+        User: "What time is it?"
+        Zoi: "DEV"
+
+        User: "What is today's date?"
+        Zoi: "DEV"
+
+        User: "What is my CPU?"
+        Zoi: "DEV"
+
+        User: "How much RAM do I have?"
+        Zoi: "DEV"
+
+        User: "What operating system am I running?"
+        Zoi: "DEV"
+
+        User: "List my installed programs."
+        Zoi: "DEV"
+
+        User: "What is my IP address?"
+        Zoi: "DEV"
+
+        User: "What files are in my current directory?"
+        Zoi: "DEV"
+
+        User: "What are the latest tech news?"
+        Zoi: "DEV"
+
+        [Programming → Answer normally]
+        User: "How do I reverse a string in Python?"
+        Zoi: "You can reverse a string in Python using slicing: text[::-1]"
+
+        User: "What is the difference between let and const in JavaScript?"
+        Zoi: "let allows reassignment while const does not. Both are block-scoped."
+
+        User: "How do I create a thread in Deno?"
+        Zoi: "Use the Worker API: new Worker(new URL('./worker.ts', import.meta.url).href, { type: 'module' })"
+
+        [Technical concepts → Answer normally]
+        User: "What is a deadlock?"
+        Zoi: "A deadlock is when two or more processes are waiting for each other to release resources, causing all of them to be stuck."
+
+        User: "Explain what DNS is."
+        Zoi: "DNS (Domain Name System) translates domain names like google.com into IP addresses."
+
+        [Error diagnosis → Answer normally]
+        User: "I got 'ENOENT: no such file or directory'. What does it mean?"
+        Zoi: "This error means your program tried to access a file or directory that does not exist. Check the path."
+
+        User: "My code throws 'TypeError: Cannot read property of undefined'"
+        Zoi: "This happens when you try to access a property on a variable that is undefined. Add a null check before accessing it."`,
+      },
+      {
+        role: "user",
+        content: translatedMessage,
+      },
+    ],
+    model: config.ai.model["LFM2.5-1.2B-Thinking-F16"],
+    temperature: 0,
+    batchSize: 128000,
+    threads: 4,
+    onChunk: (chunk) => {
+      const text = chunk.content;
+
+      if (text) {
+        Deno.stdout.write(encoder.encode(bgBlack(cyan(text))));
+      }
+    },
+  },
+);
+// console.log(
+//   `%c${config.ai["emoji-log"]} ${translatedResponse}`,
+//   config.ai["style-log"],
+// );
+console.log("\n");
+console.log(
+  `%c${config.ai["emoji-log"]} ${await dictionaryText(
+    systemData,
+    "answer-in-your-language",
+    "Permítame responder en su idioma",
+  )}`,
+  config.ai["style-log"],
+);
+const response = removeThinkTags(request?.content?.trim() || "");
+if (response === "DEV") {
+  console.log("TRANSFIRIENDO PREGUNTA AL DESARROLLADOR");
+} else if (response !== "") {
+  const translatedResponse = await translate(
+    `eng-${systemData.language.iso3}` as Pair,
+    response || "",
+  );
+  console.log(
+    `%c${config.ai["emoji-log"]} ${translatedResponse}`,
+    config.ai["style-log"],
+  );
+} else {
+  console.error("Hubo un error en la respuesta de Zoi");
+}
+// const { improveMessage, intent } = await userIntent(
+//   translatedMessage ?? promptMessage,
+// );
+Deno.exit(0);
 let message = "";
 
 if (input.length == 0) {
@@ -51,10 +171,10 @@ if (input.length == 0) {
 console.log("Original Message:", message);
 console.debug("✋🏻⏳...");
 
-const llama = new LlamaCpp({
+const llama2 = new LlamaCpp({
   port: 18080,
 });
-const intent = await llama.sendMessage(
+const intent2 = await llama.sendMessage(
   {
     messages: [
       {
@@ -285,7 +405,7 @@ Response:`,
     threads: 4,
   },
 );
-const translatedResponse = await translate(
+const translatedResponse2 = await translate(
   `eng-${CODE3}` as Pair,
   performantAiResponse?.content?.trim() || "",
 );

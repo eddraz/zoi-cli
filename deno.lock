@@ -13,6 +13,7 @@
     "jsr:@std/encoding@1": "1.0.11",
     "jsr:@std/expect@1": "1.0.20",
     "jsr:@std/fmt@1": "1.0.10",
+    "jsr:@std/fmt@^1.0.10": "1.0.10",
     "jsr:@std/fs@1": "1.0.24",
     "jsr:@std/fs@^1.0.24": "1.0.24",
     "jsr:@std/internal@^1.0.12": "1.0.14",
@@ -38,7 +39,7 @@
       "integrity": "eb2f0b7546c7bca2000d8b0282c54d50d91cf6d75cb26a80df25a6de8c4bc044",
       "dependencies": [
         "jsr:@std/encoding",
-        "jsr:@std/fmt",
+        "jsr:@std/fmt@1",
         "jsr:@std/fs@1",
         "jsr:@std/path@1"
       ]
@@ -265,6 +266,7 @@
       "jsr:@std/assert@1",
       "jsr:@std/async@1",
       "jsr:@std/expect@1",
+      "jsr:@std/fmt@^1.0.10",
       "jsr:@std/fs@^1.0.24",
       "jsr:@std/testing@1",
       "npm:minisearch@^7.2.0",
