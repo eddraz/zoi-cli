@@ -15,16 +15,20 @@
         "main": "/home/eddraz/Models/granite-4.0-h-1b-bf16.gguf"
       },
       "LFM2.5-230M:F16": {
-        "main": "/home/eddraz/Models/LFM2.5-230M-F16.gguf"
+        "main": "/home/eddraz/Models/LFM2.5-230M-F16.gguf",
+        "chat-template": "chatml"
       },
       "LFM2.5-1.2B-Instruct-F16": {
-        "main": "/home/eddraz/Models/LFM2.5-1.2B-Instruct-F16.gguf"
+        "main": "/home/eddraz/Models/LFM2.5-1.2B-Instruct-F16.gguf",
+        "chat-template": "chatml"
       },
       "LFM2.5-1.2B-Thinking-F16": {
-        "main": "/home/eddraz/Models/LFM2.5-1.2B-Thinking-F16.gguf"
+        "main": "/home/eddraz/Models/LFM2.5-1.2B-Thinking-F16.gguf",
+        "chat-template": "chatml"
       },
       "LFM2.5-2.6B-F16": {
-        "main": "/home/eddraz/Models/LFM2.5-2.6B-F16.gguf"
+        "main": "/home/eddraz/Models/LFM2.5-2.6B-F16.gguf",
+        "chat-template": "chatml"
       },
       "MiniCPM5-1b:F16": {
         "main": "/home/eddraz/Models/MiniCPM5-1B-F16.gguf"

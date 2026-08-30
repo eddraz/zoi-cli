@@ -43,12 +43,15 @@ export interface ModelParameters {
     "server-path"?: string;
     main: string;
     draft?: string;
+    "chat-template"?: string;
+    chatTemplate?: string;
   };
   temperature?: number;
   threads?: number;
   maxTokens?: number;
   contextSize?: number;
   specType?: string;
+  chatTemplate?: string;
   cacheTypeK?:
   | "f32"
   | "f16"
@@ -402,6 +405,7 @@ export class LlamaCpp {
     threads = 4,
     contextSize = 2048,
     specType = "mtp:n_max=2",
+    chatTemplate: chatTemplateParam,
     cacheTypeK = "f16",
     cacheTypeV = "f16",
   }: ModelParameters): Promise<ServerLease> {
@@ -457,6 +461,10 @@ export class LlamaCpp {
 
       const cmd = [model["server-path"] || config.ai["server-path"], "-m", model.main];
       if (model.draft) cmd.push("--model-draft", model.draft, "--spec-type", specType);
+      const chatTemplate = model["chat-template"] || model.chatTemplate || chatTemplateParam;
+      if (chatTemplate) {
+        cmd.push("--chat-template", chatTemplate);
+      }
       cmd.push(
         "-c", contextSize.toString(), "--threads", threads.toString(),
         ...(!model["server-path"] || model["server-path"] === config.ai["server-path"]
@@ -891,6 +899,7 @@ export class LlamaCpp {
       threads,
       contextSize,
       specType,
+      chatTemplate,
       cacheTypeK,
       cacheTypeV,
       onChunk,
@@ -904,6 +913,7 @@ export class LlamaCpp {
         threads,
         contextSize,
         specType,
+        chatTemplate,
         cacheTypeK,
         cacheTypeV,
       });
