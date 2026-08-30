@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "current-time": {
+      "description": "Linux command to get the current local date and time. Use this tool to establish the current temporal context.",
+      "command": "date"
+    },
+    "translate": {
+      "description": "Linux command to get the translation of a text.",
+      "command": "translate"
+    }
+  }
+}

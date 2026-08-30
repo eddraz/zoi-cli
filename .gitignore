@@ -1,0 +1,8 @@
+apps.json
+data.json
+# Local Pi runtime state
+.atl/
+*.db
+*.db-shm
+*.db-wal
+

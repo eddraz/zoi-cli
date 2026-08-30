@@ -1,0 +1,58 @@
+{
+  "ai": {
+    "port": "18080",
+    "server-path": "llama-server",
+    "emoji-log": "💬",
+    "style-log": "color: #fa4dc6; background-color: #170110",
+    "model": {
+      "supra-50m:F32": {
+        "main": "/home/eddraz/Models/Supra-50M-f32.gguf"
+      },
+      "granite-4.0-h-350m:BF16": {
+        "main": "/home/eddraz/Models/granite-4.0-h-350m-bf16.gguf"
+      },
+      "granite-4.0-h-1b:BF16": {
+        "main": "/home/eddraz/Models/granite-4.0-h-1b-bf16.gguf"
+      },
+      "LFM2.5-230M:F16": {
+        "main": "/home/eddraz/Models/LFM2.5-230M-F16.gguf"
+      },
+      "LFM2.5-1.2B-Instruct-F16": {
+        "main": "/home/eddraz/Models/LFM2.5-1.2B-Instruct-F16.gguf"
+      },
+      "LFM2.5-1.2B-Thinking-F16": {
+        "main": "/home/eddraz/Models/LFM2.5-1.2B-Thinking-F16.gguf"
+      },
+      "LFM2.5-2.6B-F16": {
+        "main": "/home/eddraz/Models/LFM2.5-2.6B-F16.gguf"
+      },
+      "MiniCPM5-1b:F16": {
+        "main": "/home/eddraz/Models/MiniCPM5-1B-F16.gguf"
+      },
+      "Llama-3.2-3B-Agent007-Coder:Q8": {
+        "main": "/home/eddraz/Models/Llama-3.2-3B-Agent007-Coder.Q8_0.gguf"
+      },
+      "qwen2.5-1.5b-coder:Q8": {
+        "main": "/home/eddraz/Models/qwen2.5-coder-1.5b-instruct-q8_0.gguf"
+      },
+      "qwen3-1.7b:Q8": {
+        "main": "/home/eddraz/Models/Qwen3-1.7B-Q8_0.gguf"
+      },
+      "deepseek-coder-1.3b-instruct:Q8": {
+        "main": "/home/eddraz/Models/deepseek-coder-1.3b-instruct.Q8_0.gguf"
+      },
+      "Llama-3.2-3B-Coder:Q8": {
+        "main": "/home/eddraz/Models/Llama-3.2-3B-Agent007-Coder.Q8_0.gguf"
+      },
+      "DeepSeek-R1-Distill-Qwen-1.5B:BF16": {
+        "main": "/home/eddraz/Models/DeepSeek-R1-Distill-Qwen-1.5B-BF16.gguf"
+      },
+      "granite-3b-code-instruct:Q4": {
+        "main": "/home/eddraz/Models/granite-3b-code-instruct.Q4_K_M.gguf"
+      },
+      "Ministral-3-3B-Instruct-2512:Q8": {
+        "main": "/home/eddraz/Models/Ministral-3-3B-Instruct-2512-Q8_0.gguf"
+      }
+    }
+  }
+}
