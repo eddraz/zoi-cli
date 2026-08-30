@@ -68,7 +68,7 @@ const intent = await llama.sendMessage(
     model: config.ai.model["LFM2.5-230M:F16"],
     temperature: 0,
     maxTokens: 100,
-    threads: 2,
+    threads: 4,
   },
 );
 const userIntent2 = await llama.sendMessage(
@@ -91,7 +91,7 @@ const userIntent2 = await llama.sendMessage(
     model: config.ai.model["granite-4.0-h-1b:BF16"],
     temperature: 0,
     maxTokens: 100,
-    threads: 2,
+    threads: 4,
   },
 );
 const mcpTools = Object.keys(mcpConfig.mcpServers);
@@ -123,7 +123,7 @@ Is this tool necessary?`,
         model: config.ai.model["qwen2.5-1.5b-coder:Q8"],
         temperature: 0,
         maxTokens: 100,
-        threads: 2,
+        threads: 4,
       },
     );
 
@@ -165,8 +165,8 @@ Commands to execute:`;
           model: config.ai.model["Ministral-3-3B-Instruct-2512:Q8"],
           temperature: 0,
           maxTokens: 100,
-          contextSize: 10000,
-          threads: 2,
+          contextSize: 4096,
+          threads: 4,
         },
       );
       if (server.command) {
@@ -229,8 +229,8 @@ USER PROMPT: "${message?.trim()}"`,
               model: config.ai.model["Ministral-3-3B-Instruct-2512:Q8"],
               temperature: 0,
               maxTokens: 100,
-              contextSize: 10000,
-              threads: 2,
+              contextSize: 4096,
+              threads: 4,
             },
           );
           console.log(">>", cmdResponse);
@@ -282,7 +282,7 @@ Response:`,
     model: config.ai.model["LFM2.5-1.2B-Instruct-F16"],
     temperature: 0,
     maxTokens: 100,
-    threads: 2,
+    threads: 4,
   },
 );
 const translatedResponse = await translate(

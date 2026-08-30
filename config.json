@@ -2,6 +2,15 @@
   "ai": {
     "port": "18080",
     "server-path": "llama-server",
+    "threads": 4,
+    "threads-batch": 4,
+    "ngl": 99,
+    "flash-attn": "on",
+    "cache-type-k": "q8_0",
+    "cache-type-v": "q8_0",
+    "batch-size": 512,
+    "ubatch-size": 512,
+    "context-size": 4096,
     "emoji-log": "💬",
     "style-log": "color: #fa4dc6; background-color: #170110",
     "model": {

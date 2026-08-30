@@ -45,9 +45,19 @@ export interface ModelParameters {
     draft?: string;
     "chat-template"?: string;
     chatTemplate?: string;
+    ngl?: number;
+    "n-gpu-layers"?: number;
+    "flash-attn"?: "on" | "off" | "auto" | boolean;
+    flashAttn?: "on" | "off" | "auto" | boolean;
   };
   temperature?: number;
   threads?: number;
+  threadsBatch?: number;
+  ngl?: number;
+  nGl?: number;
+  flashAttn?: "on" | "off" | "auto" | boolean;
+  batchSize?: number;
+  uBatchSize?: number;
   maxTokens?: number;
   contextSize?: number;
   specType?: string;
@@ -402,12 +412,18 @@ export class LlamaCpp {
   async loadModel({
     model,
     temperature = 0.5,
-    threads = 4,
-    contextSize = 2048,
+    threads = (config.ai as Record<string, any>)["threads"] ?? 4,
+    threadsBatch: threadsBatchParam,
+    contextSize = (config.ai as Record<string, any>)["context-size"] ?? 4096,
     specType = "mtp:n_max=2",
     chatTemplate: chatTemplateParam,
-    cacheTypeK = "f16",
-    cacheTypeV = "f16",
+    ngl: nglParam,
+    nGl: nGlParam,
+    flashAttn: flashAttnParam,
+    batchSize: batchSizeParam,
+    uBatchSize: uBatchSizeParam,
+    cacheTypeK = (config.ai as Record<string, any>)["cache-type-k"] ?? "q8_0",
+    cacheTypeV = (config.ai as Record<string, any>)["cache-type-v"] ?? "q8_0",
   }: ModelParameters): Promise<ServerLease> {
     const requestedPath = this.runtime.canonicalize(model.main);
     const state = stateFor(this.PORT);
@@ -465,6 +481,32 @@ export class LlamaCpp {
       if (chatTemplate) {
         cmd.push("--chat-template", chatTemplate);
       }
+
+      const ngl = model["n-gpu-layers"] ?? model.ngl ?? nglParam ?? nGlParam ?? (config.ai as Record<string, any>)["ngl"];
+      if (ngl !== undefined && ngl !== null) {
+        cmd.push("-ngl", ngl.toString());
+      }
+
+      const fa = model["flash-attn"] ?? model.flashAttn ?? flashAttnParam ?? (config.ai as Record<string, any>)["flash-attn"];
+      if (fa !== undefined && fa !== null) {
+        cmd.push("--flash-attn", typeof fa === "boolean" ? (fa ? "on" : "off") : fa);
+      }
+
+      const tb = threadsBatchParam ?? (config.ai as Record<string, any>)["threads-batch"];
+      if (tb !== undefined && tb !== null) {
+        cmd.push("-tb", tb.toString());
+      }
+
+      const bs = batchSizeParam ?? (config.ai as Record<string, any>)["batch-size"];
+      if (bs !== undefined && bs !== null) {
+        cmd.push("-b", bs.toString());
+      }
+
+      const ubs = uBatchSizeParam ?? (config.ai as Record<string, any>)["ubatch-size"];
+      if (ubs !== undefined && ubs !== null) {
+        cmd.push("-ub", ubs.toString());
+      }
+
       cmd.push(
         "-c", contextSize.toString(), "--threads", threads.toString(),
         ...(!model["server-path"] || model["server-path"] === config.ai["server-path"]
@@ -897,6 +939,12 @@ export class LlamaCpp {
       temperature,
       maxTokens,
       threads,
+      threadsBatch,
+      ngl,
+      nGl,
+      flashAttn,
+      batchSize,
+      uBatchSize,
       contextSize,
       specType,
       chatTemplate,
@@ -911,6 +959,12 @@ export class LlamaCpp {
         model,
         temperature,
         threads,
+        threadsBatch,
+        ngl,
+        nGl,
+        flashAttn,
+        batchSize,
+        uBatchSize,
         contextSize,
         specType,
         chatTemplate,

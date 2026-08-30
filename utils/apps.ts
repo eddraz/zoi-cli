@@ -65,9 +65,9 @@ export async function getDescription(app: App) {
         ],
         model: config.ai.model["LFM2.5-230M:F16"],
         temperature: 0,
-        maxTokens: 32000,
-        contextSize: 32000,
-        threads: 2,
+        maxTokens: 1000,
+        contextSize: 4096,
+        threads: 4,
       },
     );
 
@@ -109,9 +109,9 @@ export async function getSearchContent(app: App) {
           ],
           model: config.ai.model["LFM2.5-230M:F16"],
           temperature: 0,
-          maxTokens: 32000,
-          contextSize: 32000,
-          threads: 2,
+          maxTokens: 1000,
+          contextSize: 4096,
+          threads: 4,
         },
       );
       app.description = `${define?.content || ""}\n-------\n${app.description}`;

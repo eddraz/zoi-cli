@@ -56,7 +56,7 @@ export async function translateText(from: string, to: Language, text: string) {
           model: config.ai.model["granite-4.0-h-1b:BF16"],
           temperature: 0,
           maxTokens: 100,
-          threads: 2,
+          threads: 4,
         },
       );
 

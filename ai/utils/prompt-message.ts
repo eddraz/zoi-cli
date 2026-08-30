@@ -72,7 +72,7 @@ Difficulty level:
             model: config.ai.model["granite-4.0-h-350m:BF16"],
             temperature: 0,
             maxTokens: 150,
-            threads: 2,
+            threads: 4,
         });
 
         if (result?.content) {
@@ -148,7 +148,7 @@ export async function improveMessage(text: string) {
                 model: config.ai.model["granite-4.0-h-1b:BF16"],
                 temperature: 0.2,
                 maxTokens: 80,
-                threads: 2,
+                threads: 4,
             },
         );
 
@@ -191,7 +191,7 @@ export async function sayGoal(text: string) {
                 model: config.ai.model["granite-4.0-h-350m:BF16"],
                 temperature: 0,
                 maxTokens: 50,
-                threads: 2
+                threads: 4
             },
         );
         return result;
@@ -220,7 +220,7 @@ export async function sayStepsToAchieveGoal(text: string) {
                 model: config.ai.model["qwen2.5-1.5b-coder:Q8"],
                 temperature: 0,
                 maxTokens: 100,
-                threads: 2
+                threads: 4
             },
         );
         return result;

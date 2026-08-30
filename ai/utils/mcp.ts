@@ -57,7 +57,7 @@ export async function searchTags(text: string) {
                 model: config.ai.model["qwen2.5-1.5b-coder:Q8"],
                 temperature: 0,
                 maxTokens: 1000,
-                threads: 2
+                threads: 4
             },
         );
         return result;
@@ -93,7 +93,7 @@ Respond ONLY with a valid JSON object in this exact format:
                 model: config.ai.model["qwen2.5-1.5b-coder:Q8"],
                 temperature: 0,
                 maxTokens: 100,
-                threads: 2
+                threads: 4
             },
         );
         return result;
