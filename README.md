@@ -15,6 +15,11 @@ Antes de ejecutar **Zoi CLI**, asegúrate de contar con los siguientes component
 3. **[SearXNG](https://github.com/searxng/searxng)** ⚠️ **(Obligatorio)**:
    - **Es necesario tener corriendo una instancia local del metabuscador [SearXNG](https://github.com/searxng/searxng)** para permitir la búsqueda de documentación web y contexto de comandos/aplicaciones.
    - Por defecto, Zoi busca SearXNG en `http://localhost:17380` (puedes personalizarlo con la variable de entorno `SEARXNG_URL`).
+4. **Navegador para extracción SPA (Puppeteer):**
+   - Para extraer contenido renderizado dinámicamente de páginas SPA:
+     ```bash
+     npx puppeteer browsers install firefox
+     ```
 
 ---
 
@@ -83,12 +88,17 @@ El archivo [`config.json`](./config.json) define los parámetros de los modelos 
    cd zoi-cli
    ```
 
-2. **Ejecutar en modo desarrollo:**
+2. **Instalar el navegador para Puppeteer:**
+   ```bash
+   npx puppeteer browsers install firefox
+   ```
+
+3. **Ejecutar en modo desarrollo:**
    ```bash
    deno task dev
    ```
 
-3. **Ejecutar pruebas unitarias:**
+4. **Ejecutar pruebas unitarias:**
    ```bash
    deno task test
    ```
