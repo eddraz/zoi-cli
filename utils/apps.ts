@@ -83,7 +83,7 @@ export async function getSearchContent(app: App) {
     });
 
     const query = `What is the '${app.name}' CLI application or command?`;
-    console.log(query)
+    console.log(query);
     const webSearchResponse = await webSearch(query);
     const webSearchResults = webSearchResponse.results;
     if (webSearchResults && webSearchResults.length > 0) {
@@ -114,8 +114,7 @@ export async function getSearchContent(app: App) {
           threads: 2,
         },
       );
-      const description = define?.content;
-      app.description = `${description}\n\n${app.description}`;
+      app.description = `${define?.content || ""}\n-------\n${app.description}`;
     }
 
     app.searchContent = app.description;
@@ -150,7 +149,7 @@ async function loopApps(
     config.ai["style-log"],
     `\`${appName}\``,
   );
-  console.log(paths)
+  console.log(paths);
 
   if (typeof appName === "string") {
     const appBD = await kv.get(["apps", appName]);
@@ -252,12 +251,6 @@ export async function getApps() {
       const info = r.toString().trim();
       return info;
     });
-    const userLocalBinApps = await loopApps(
-      systemData,
-      denoKV,
-      userLocalBinPath.split("\n"),
-      {},
-    );
     const localBinPath = await runCommand({
       commands: ["ls", "/bin"],
       response: "text",
@@ -265,28 +258,17 @@ export async function getApps() {
       const info = r.toString().trim();
       return info;
     });
-    const localBinApps = await loopApps(
+    const apps = await loopApps(
       systemData,
       denoKV,
-      localBinPath.split("\n"),
-      {},
-    );
-    const usrLocalBinPath = await runCommand({
-      commands: ["ls", "/usr/local/bin"],
-      response: "text",
-    }).then((r: string | Deno.ChildProcess) => {
-      const info = r.toString().trim();
-      return info;
-    });
-    const usrLocalBinApps = await loopApps(
-      systemData,
-      denoKV,
-      usrLocalBinPath.split("\n"),
+      [...userLocalBinPath.split("\n"), ...localBinPath.split("\n")].filter(
+        (t) => t && t.length > 0
+      ),
       {},
     );
 
-    console.log(usrLocalBinApps);
-    return {...userLocalBinApps, ...localBinApps, ...usrLocalBinApps};
+    console.log(apps);
+    return apps;
   } catch (error) {
     throw error;
   }
