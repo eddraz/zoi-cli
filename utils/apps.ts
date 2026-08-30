@@ -286,6 +286,7 @@ export async function getApps() {
     );
 
     console.log(usrLocalBinApps);
+    return {...userLocalBinApps, ...localBinApps, ...usrLocalBinApps};
   } catch (error) {
     throw error;
   }
