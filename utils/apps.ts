@@ -20,6 +20,7 @@ export interface App {
 }
 
 async function getWebSuccessfully(
+  appName: string,
   results: Array<{
     title?: unknown;
     content?: string;
@@ -31,11 +32,61 @@ async function getWebSuccessfully(
   const response = await fetch(endpoint);
 
   if (!response.ok) {
-    results.shift();
-    return getWebSuccessfully(results);
+    if (results.length > 0) {
+      results.shift();
+      return getWebSuccessfully(appName, results);
+    }
+  }
+  const html = await response.text();
+  const textContent = removeAccents(
+    markdownToText(htmlToMarkdown(html)),
+  );
+
+  if (textContent.indexOf(appName) < 0) {
+    if (results.length > 0) {
+      results.shift();
+      return getWebSuccessfully(appName, results);
+    }
   }
 
-  return { url, html: await response.text() };
+  return { url, html };
+}
+
+async function getManAndWhatis(appName: string): Promise<{ whatis?: string; man?: string; combined?: string }> {
+  let whatisOutput = "";
+  let manOutput = "";
+
+  try {
+    const whatisRes = await runCommand({
+      commands: `whatis ${appName} 2>/dev/null`,
+      response: "text",
+      timeout: 2000,
+    });
+    if (typeof whatisRes === "string" && whatisRes.trim() && !whatisRes.includes("nothing appropriate")) {
+      whatisOutput = whatisRes.trim();
+    }
+  } catch (_) {}
+
+  try {
+    const manRes = await runCommand({
+      commands: `man -P cat ${appName} 2>/dev/null | head -n 150`,
+      response: "text",
+      timeout: 3000,
+    });
+    if (typeof manRes === "string" && manRes.trim() && !manRes.includes("No manual entry")) {
+      manOutput = manRes.trim();
+    }
+  } catch (_) {}
+
+  const parts: string[] = [];
+  if (whatisOutput) parts.push(`WHATIS:\n${whatisOutput}`);
+  if (manOutput) parts.push(`MANUAL:\n${manOutput}`);
+
+  return {
+    whatis: whatisOutput || undefined,
+    man: manOutput || undefined,
+    combined: parts.length > 0 ? parts.join("\n\n") : undefined,
+  };
 }
 
 async function getUsage(appName: string): Promise<string> {
@@ -61,11 +112,11 @@ export async function getDescription(app: App, systemData: OperativeSystem) {
         messages: [
           {
             role: "user",
-            content: `What is the '${app.name}' CLI application or command in ${
+            content: `Explain what the '${app.name}' command does in ${
               systemData.os.information?.["PRETTY_NAME"] || systemData.os.name
             }.
 
-              CONTEXT: ${app.usage}`,
+            CONTEXT: ${app.usage}`,
           },
         ],
         model: config.ai.model["LFM2.5-230M:F16"],
@@ -86,41 +137,64 @@ export async function getSearchContent(app: App, systemData: OperativeSystem) {
     const llama = new LlamaCpp({
       port: parseInt(config.ai.port),
     });
-
-    const query = `What is the '${app.name}' CLI application or command in ${
+    const query = `"${app.name}" CLI binary application in ${
       systemData.os.information?.["PRETTY_NAME"] || systemData.os.name
-    }?`;
-    const webSearchResponse = await webSearch(query);
-    const webSearchResults = webSearchResponse.results;
-    if (webSearchResults && webSearchResults.length > 0) {
-      let { url, html } = await getWebSuccessfully(webSearchResults);
+    }.`;
+    console.log(query);
 
-      if (await isSPA(html)) {
-        html = await getContentSPA(url as string) || html;
+    let docContent = "";
+
+    try {
+      const webSearchResponse = await webSearch(query);
+      const webSearchResults = webSearchResponse?.results;
+      console.log("webSearchResponse", webSearchResponse);
+
+      if (webSearchResults && webSearchResults.length > 0) {
+        const webDoc = await getWebSuccessfully(app.name, [...webSearchResults]);
+        if (webDoc?.html) {
+          let html = webDoc.html;
+          if (await isSPA(html)) {
+            html = (await getContentSPA(webDoc.url as string)) || html;
+          }
+          if (html) {
+            docContent = removeAccents(markdownToText(htmlToMarkdown(html)));
+          }
+        }
       }
+    } catch (webErr) {
+      console.warn(`[getSearchContent] Web search failed for ${app.name}:`, webErr);
+    }
 
+    // Fallback: si no se obtuvieron resultados de la web o no se encontró contenido relevante, usar `whatis` y `man`
+    if (!docContent) {
+      console.log(`ℹ️ Sin resultados web para '${app.name}'. Obteniendo documentación local con 'whatis' y 'man'...`);
+      const localDoc = await getManAndWhatis(app.name);
+      if (localDoc.combined) {
+        docContent = localDoc.combined;
+      }
+    }
+
+    if (docContent) {
       const define = await llama.sendMessage(
         {
           messages: [
             {
               role: "user",
-              content: `What is the '${app.name}' CLI application or command.
+              content: `Explain what the '${app.name}' command does in ${
+                systemData.os.information?.["PRETTY_NAME"] || systemData.os.name
+              }. Include its purpose, typical use cases, and a basic usage example.
 
-                ${
-                removeAccents(
-                  markdownToText(htmlToMarkdown(html)),
-                )
-              }`,
+                ${docContent}`,
             },
           ],
-          model: config.ai.model["qwen3-1.7b:Q8"],
+          model: config.ai.model["LFM2.5-230M:F16"],
           temperature: 0,
           maxTokens: 1000,
           contextSize: 4096,
           threads: 4,
         },
       );
-      app.description = `${define?.content || ""}\n-------\n${app.description}`;
+      app.description = `${define?.content || ""}\n-------\n${app.description || ""}`;
     }
 
     app.searchContent = app.description;
@@ -255,7 +329,7 @@ async function loopApps(
 export async function getApps() {
   try {
     const systemData = JSON.parse(await manageFile("data.json", "{}"));
-    const denoKV = new DenoKV({ path: "/apps.db" });
+    const denoKV = new DenoKV({ path: "/zoi.db" });
     const userLocalBinPath = await runCommand({
       commands: ["ls", systemData.os.home + "/.local/bin"],
       response: "text",
