@@ -38,22 +38,20 @@ async function getWebSuccessfully(
   return { url, html: await response.text() };
 }
 
-async function getUsage(appName: string) {
+async function getUsage(appName: string): Promise<string> {
   try {
-    console.log("EXEC", appName);
     const cmd = await runCommand({
-      commands: [appName, "--help"],
+      commands: `timeout 1.5 ${appName} --help 2>&1`,
       response: "text",
-    }).then((r: string | Deno.ChildProcess) => {
-      console.log("respondió;", r);
-      return r.toString().trim()}).catch(err => console.error("error:", err));
-    console.log(cmd);
-    return cmd;
+      timeout: 3000,
+    });
+    return (cmd as string)?.toString().trim() || "";
   } catch (error) {
-    console.error(error);
+    console.error(`[getUsage] Failed to get usage for ${appName}:`, error);
+    return "";
   }
 }
-export async function getDescription(app: App) {
+export async function getDescription(app: App, systemData: OperativeSystem) {
   try {
     const llama = new LlamaCpp({
       port: parseInt(config.ai.port),
@@ -63,7 +61,9 @@ export async function getDescription(app: App) {
         messages: [
           {
             role: "user",
-            content: `What is the '${app.name}' CLI application or command.
+            content: `What is the '${app.name}' CLI application or command in ${
+              systemData.os.information?.["PRETTY_NAME"] || systemData.os.name
+            }.
 
               CONTEXT: ${app.usage}`,
           },
@@ -81,13 +81,15 @@ export async function getDescription(app: App) {
     console.error(error);
   }
 }
-export async function getSearchContent(app: App) {
+export async function getSearchContent(app: App, systemData: OperativeSystem) {
   try {
     const llama = new LlamaCpp({
       port: parseInt(config.ai.port),
     });
 
-    const query = `What is the '${app.name}' CLI application or command?`;
+    const query = `What is the '${app.name}' CLI application or command in ${
+      systemData.os.information?.["PRETTY_NAME"] || systemData.os.name
+    }?`;
     const webSearchResponse = await webSearch(query);
     const webSearchResults = webSearchResponse.results;
     if (webSearchResults && webSearchResults.length > 0) {
@@ -111,7 +113,7 @@ export async function getSearchContent(app: App) {
               }`,
             },
           ],
-          model: config.ai.model["LFM2.5-230M:F16"],
+          model: config.ai.model["qwen3-1.7b:Q8"],
           temperature: 0,
           maxTokens: 1000,
           contextSize: 4096,
@@ -122,6 +124,7 @@ export async function getSearchContent(app: App) {
     }
 
     app.searchContent = app.description;
+    console.log(app);
 
     if (app.description) {
       app.searchContent = removeAccents(
@@ -169,7 +172,7 @@ async function loopApps(
     console.log(existsApp);
 
     if (existsApp) {
-      console.log(appBD.value, !appBD.value)
+      console.log(appBD.value, !appBD.value);
       if (!appBD.value) {
         app.usage = await getUsage(app.name);
 
@@ -183,7 +186,7 @@ async function loopApps(
           )}...`,
           config.ai["style-log"],
         );
-        app.description = await getDescription(app);
+        app.description = await getDescription(app, systemData);
 
         console.log(
           `%c${config.ai["emoji-log"]} ${await dictionaryText(
@@ -193,7 +196,7 @@ async function loopApps(
           )}...`,
           config.ai["style-log"],
         );
-        app.searchContent = await getSearchContent(app);
+        app.searchContent = await getSearchContent(app, systemData);
 
         toEdit = true;
       } else {
@@ -210,7 +213,7 @@ async function loopApps(
             )}...`,
             config.ai["style-log"],
           );
-          app.description = await getDescription(app);
+          app.description = await getDescription(app, systemData);
           toEdit = true;
         }
         if (!appDBValue.searchContent) {
@@ -222,7 +225,7 @@ async function loopApps(
             )}...`,
             config.ai["style-log"],
           );
-          app.searchContent = await getSearchContent(app);
+          app.searchContent = await getSearchContent(app, systemData);
           toEdit = true;
         }
       }
@@ -271,7 +274,7 @@ export async function getApps() {
       systemData,
       denoKV,
       [...userLocalBinPath.split("\n"), ...localBinPath.split("\n")].filter(
-        (t) => t && t.length > 0
+        (t) => t && t.length > 0,
       ),
       {},
     );

@@ -70,4 +70,18 @@ describe("runCommand", () => {
             await (proc as Deno.ChildProcess).status;
         }
     });
+
+    test("terminates hanging command when timeout is exceeded", async () => {
+        let error: Error | undefined;
+        try {
+            await runCommand({
+                commands: ["sleep", "5"],
+                timeout: 50,
+            });
+        } catch (e) {
+            error = e as Error;
+        }
+        expect(error).toBeDefined();
+        expect(error?.message).toContain("timed out after 50ms");
+    });
 });

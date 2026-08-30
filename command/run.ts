@@ -12,6 +12,8 @@ export interface RunCommandOptions {
     cwd?: string;
     /** Variables de entorno personalizadas. */
     env?: Record<string, string | undefined>;
+    /** Límite de tiempo en milisegundos para la ejecución del comando. Si se excede, el proceso es terminado. */
+    timeout?: number;
 }
 
 /**
@@ -71,6 +73,7 @@ export function resolveSpawnCommand(
  * @param options.shell - Ejecutar dentro de un shell o ruta a shell específico.
  * @param options.cwd - Directorio de trabajo opcional.
  * @param options.env - Variables de entorno opcionales.
+ * @param options.timeout - Timeout opcional en milisegundos.
  * @returns Promesa que resuelve a un `string` con la salida si `response === "text"`, o a un `Deno.ChildProcess` si `response === "blob"`.
  * @throws Propaga cualquier error ocurrido durante la creación o ejecución del proceso.
  */
@@ -80,6 +83,7 @@ export async function runCommand({
     shell,
     cwd,
     env,
+    timeout,
 }: RunCommandOptions): Promise<
     string | Deno.ChildProcess
 > {
@@ -121,6 +125,33 @@ export async function runCommand({
 
         if (response === "blob") {
             return command.spawn();
+        }
+
+        if (timeout && timeout > 0) {
+            const child = command.spawn();
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            const timeoutPromise = new Promise<never>((_, reject) => {
+                timer = setTimeout(() => {
+                    try {
+                        child.kill("SIGKILL");
+                    } catch {
+                        // ignore
+                    }
+                    reject(new Error(`Command timed out after ${timeout}ms: ${binary} ${args.join(" ")}`));
+                }, timeout);
+            });
+
+            try {
+                const result = await Promise.race([child.output(), timeoutPromise]);
+                clearTimeout(timer);
+                const decoder = new TextDecoder();
+                const stdoutText = decoder.decode(result.stdout);
+                const stderrText = decoder.decode(result.stderr);
+                return stdoutText.trim() ? stdoutText : stderrText;
+            } catch (err) {
+                clearTimeout(timer);
+                throw err;
+            }
         }
 
         const result = await command.output();
